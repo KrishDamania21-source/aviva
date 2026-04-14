@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest manifest-version="0.1" xmlns="http://www.tableau.com/xml/extension_manifest">
+  <dashboard-extension id="com.aviva.nlquery" extension-version="1.0.0">
+    <default-locale>en_US</default-locale>
+    <name resource-id="name"/>
+    <description resource-id="description"/>
+    <author
+      name="Krish Damania"
+      email="onlyforapps2107@gmail.com"
+      organization="Aviva"
+      website="https://venerable-marshmallow-1bc045.netlify.app"
+    />
+    <min-api-version>1.10</min-api-version>
+    <source-location>
+      <url>https://venerable-marshmallow-1bc045.netlify.app</url>
+    </source-location>
+    <icon>iVBORw0KGgoAAAANSUhEUgAAAEYAAABGCAYAAABxLuKEAAAASUlEQVR42u3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBxAABHgAAAABJRU5ErkJggg==</icon>
+  </dashboard-extension>
+  <resources>
+    <resource id="name">
+      <text locale="en_US">Aviva - Natural Language Query</text>
+    </resource>
+    <resource id="description">
+      <text locale="en_US">Ask your Tableau data anything in plain English. Aviva answers your question and filters the dashboard automatically.</text>
+    </resource>
+  </resources>
+</manifest>

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python loader.py)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 loader.py)"
+    ]
+  }
+}

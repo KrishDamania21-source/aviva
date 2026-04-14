@@ -1,0 +1,21 @@
+campaign_id,campaign_name,channel,month,spend,impressions,clicks,conversions,revenue
+GAD-001,Spring Widget Launch,Google Ads,Jan 2024,8500,125000,5200,520,67600
+GAD-002,Widget Performance Max,Google Ads,Feb 2024,12000,185000,7400,666,99900
+GAD-003,Gadget Pro Campaign,Google Ads,Mar 2024,10500,156000,6200,558,89280
+GAD-004,Spring Sale Push,Google Ads,Apr 2024,9800,142000,5680,511,77670
+FB-001,Gadget Pro Awareness,Facebook,Jan 2024,4200,58000,870,130,18200
+FB-002,Widget Summer Teaser,Facebook,Feb 2024,3600,52000,780,117,15210
+FB-003,Gadget Festival Ad,Facebook,Mar 2024,5100,71000,1065,160,20800
+FB-004,Spring Deal - Limited Time,Facebook,Apr 2024,4800,64000,960,144,20160
+IG-001,Spring Gadget Showcase,Instagram,Jan 2024,3800,52000,650,97,13180
+IG-002,Widget Lifestyle Content,Instagram,Feb 2024,4200,58000,725,116,16240
+IG-003,Gadget Trends 2024,Instagram,Mar 2024,5600,78000,975,146,21180
+IG-004,Summer Gadget Collection,Instagram,Apr 2024,6200,85000,1105,176,26400
+LI-001,B2B Widget Solutions,LinkedIn,Jan 2024,5600,28000,840,84,12600
+LI-002,Enterprise Gadget Platform,LinkedIn,Feb 2024,6800,35000,1050,105,15750
+LI-003,Widgets for Business,LinkedIn,Mar 2024,7200,38000,1140,114,17100
+LI-004,Q2 Enterprise Campaign,LinkedIn,Apr 2024,6500,32000,960,96,14400
+EM-001,Q1 Email Blast,Email,Jan 2024,1200,8500,1020,306,44370
+EM-002,Widget Newsletter Series,Email,Feb 2024,1400,9200,1104,364,52840
+EM-003,Gadget Subscriber Exclusive,Email,Mar 2024,1600,10000,1200,408,59160
+EM-004,Spring Clearance Email,Email,Apr 2024,1800,11000,1320,462,68970

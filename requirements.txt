@@ -1,0 +1,8 @@
+anthropic
+python-dotenv
+faiss-cpu
+pandas
+streamlit
+sentence-transformers
+fastapi
+uvicorn[standard]
