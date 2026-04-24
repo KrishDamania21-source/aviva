@@ -142,14 +142,22 @@ async function applyFilters(filters) {
         );
         applied++;
       } catch (e) {
-        errors.push(`${worksheet.name}/${filter.field}: ${e.message}`);
-        console.warn(`Filter failed on "${worksheet.name}" field "${filter.field}":`, e);
+        // Silently skip "invalid-fields" errors — this just means the sheet
+        // doesn't have this dimension (e.g. Campaign_Name on a sales sheet).
+        // Only track errors that are unexpected failures, not missing fields.
+        const msg = e.message || "";
+        if (!msg.includes("invalid-fields") && !msg.includes("parameterError")) {
+          errors.push(`${worksheet.name}/${filter.field}: ${msg}`);
+        }
+        console.warn(`Filter skipped on "${worksheet.name}" field "${filter.field}":`, e);
       }
     }
   }
 
   if (errors.length > 0 && applied === 0) {
     setStatus(`Filter error: ${errors[0]}`, "error");
+  } else {
+    setStatus("Answer ready. Filters applied.", "success");
   }
 }
 
