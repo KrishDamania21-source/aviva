@@ -8,6 +8,16 @@ from config import CSV_SOURCES, FAISS_INDEX_DIR
 EMBEDDING_DIM = 384
 MODEL_NAME_EMBEDDING = "all-MiniLM-L6-v2"
 
+# Module-level cache — model loads once, reused on every query
+_model_cache = None
+
+def _get_model(model_name: str = MODEL_NAME_EMBEDDING) -> SentenceTransformer:
+    """Return the embedding model, loading it only on first call."""
+    global _model_cache
+    if _model_cache is None:
+        _model_cache = SentenceTransformer(model_name)
+    return _model_cache
+
 
 def build_index():
     """Build a FAISS index from all data source descriptions in CSV_SOURCES.
@@ -65,8 +75,8 @@ def search_index(query: str, top_k: int = 1) -> list[dict]:
     table_names = metadata["table_names"]
     descriptions = metadata["descriptions"]
 
-    # Load embedding model and embed the query
-    model = SentenceTransformer(model_name)
+    # Use cached model — avoids reloading 100MB weights on every query
+    model = _get_model(model_name)
     query_embedding = model.encode([query], convert_to_numpy=True).astype("float32")
 
     # Search
