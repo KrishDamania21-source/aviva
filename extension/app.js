@@ -10,29 +10,44 @@
  *   6. Clear button removes all Aviva-applied filters
  */
 
-const API_URL = "https://REPLACE_WITH_YOUR_RENDER_URL";
+const API_URL = "https://aviva-api.onrender.com";
 
 // Track which filters Aviva has applied so Clear can remove them cleanly
 let appliedFilters = [];
 
+// Store the init promise so applyFilters can await it even if the user
+// asks a question before Tableau finishes initializing
+let tableauInitPromise = null;
+
 // ── DOM refs ──────────────────────────────────────────────────────────────────
-const questionInput = document.getElementById("question");
-const askBtn        = document.getElementById("askBtn");
-const statusEl      = document.getElementById("status");
-const answerCard    = document.getElementById("answerCard");
-const answerText    = document.getElementById("answerText");
+const questionInput  = document.getElementById("question");
+const askBtn         = document.getElementById("askBtn");
+const statusEl       = document.getElementById("status");
+const answerCard     = document.getElementById("answerCard");
+const answerText     = document.getElementById("answerText");
 const filtersSection = document.getElementById("filtersSection");
-const filterPills   = document.getElementById("filterPills");
-const sqlDetails    = document.getElementById("sqlDetails");
-const sqlText       = document.getElementById("sqlText");
-const clearBtn      = document.getElementById("clearBtn");
+const filterPills    = document.getElementById("filterPills");
+const sqlDetails     = document.getElementById("sqlDetails");
+const sqlText        = document.getElementById("sqlText");
+const clearBtn       = document.getElementById("clearBtn");
 
 // ── Tableau init ──────────────────────────────────────────────────────────────
-tableau.extensions.initializeAsync().then(() => {
+try {
+  if (typeof tableau !== "undefined" && tableau.extensions) {
+    tableauInitPromise = tableau.extensions.initializeAsync();
+    tableauInitPromise
+      .then(() => setStatus("Ready. Type a question above.", ""))
+      .catch(err => {
+        tableauInitPromise = null;
+        setStatus("Ready. Type a question above.", "");
+        console.warn("Tableau init failed:", err);
+      });
+  } else {
+    setStatus("Ready. Type a question above.", "");
+  }
+} catch (e) {
   setStatus("Ready. Type a question above.", "");
-}).catch(err => {
-  setStatus("Tableau connection failed: " + err.message, "error");
-});
+}
 
 // ── Event listeners ───────────────────────────────────────────────────────────
 askBtn.addEventListener("click", handleAsk);
@@ -73,7 +88,6 @@ async function handleAsk() {
     // 3. Apply filters to Tableau dashboard
     if (data.filters && data.filters.length > 0) {
       await applyFilters(data.filters);
-      setStatus(`Answer ready. ${data.filters.length} filter(s) applied to dashboard.`, "success");
     } else {
       setStatus("Answer ready. No filters applied.", "success");
     }
@@ -88,24 +102,46 @@ async function handleAsk() {
 
 // ── Apply filters to all worksheets ──────────────────────────────────────────
 async function applyFilters(filters) {
+  try {
+    // Wait for Tableau to finish initializing before accessing dashboardContent
+    if (tableauInitPromise) {
+      await tableauInitPromise;
+    }
+    if (typeof tableau === "undefined" || !tableau.extensions || !tableau.extensions.dashboardContent) {
+      setStatus("Answer ready. Tableau dashboard not accessible.", "success");
+      return;
+    }
+  } catch(e) {
+    setStatus("Answer ready. Tableau dashboard not accessible.", "success");
+    return;
+  }
   const dashboard = tableau.extensions.dashboardContent.dashboard;
   const worksheets = dashboard.worksheets;
 
-  appliedFilters = filters; // store for Clear
+  appliedFilters = filters;
+
+  let applied = 0;
+  let errors = [];
 
   for (const worksheet of worksheets) {
     for (const filter of filters) {
       try {
+        // Use string literal for FilterUpdateType — more reliable across Tableau versions
         await worksheet.applyFilterAsync(
           filter.field,
           filter.values,
-          tableau.FilterUpdateType.Replace
+          "replace"
         );
+        applied++;
       } catch (e) {
-        // Field may not exist in every worksheet — that's fine, skip it
-        console.warn(`Could not apply filter "${filter.field}" to "${worksheet.name}":`, e.message);
+        errors.push(`${worksheet.name}/${filter.field}: ${e.message}`);
+        console.warn(`Filter failed on "${worksheet.name}" field "${filter.field}":`, e);
       }
     }
+  }
+
+  if (errors.length > 0 && applied === 0) {
+    setStatus(`Filter error: ${errors[0]}`, "error");
   }
 }
 
@@ -124,7 +160,7 @@ async function handleClear() {
       try {
         await worksheet.clearFilterAsync(filter.field);
       } catch (e) {
-        console.warn(`Could not clear filter "${filter.field}" from "${worksheet.name}":`, e.message);
+        console.warn(`Could not clear filter "${filter.field}" from "${worksheet.name}":`, e);
       }
     }
   }
