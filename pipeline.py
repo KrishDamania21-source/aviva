@@ -22,10 +22,14 @@ if env_file.exists():
                 key, value = line.split('=', 1)
                 os.environ[key] = value
 
-api_key = os.environ.get("ANTHROPIC_API_KEY")
-if not api_key:
-    raise ValueError("ANTHROPIC_API_KEY not found in .env file")
-client = Anthropic(api_key=api_key)
+def _get_client():
+    """Return the Anthropic client, initializing it on first use.
+    Deferred so a missing key crashes at query time, not at import time —
+    which lets uvicorn bind its port before any error surfaces."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY is not set. Add it to your .env file or Render environment variables.")
+    return Anthropic(api_key=api_key)
 
 
 def get_table_schema(table_name: str) -> str:
@@ -56,7 +60,7 @@ Question: {question}
 
 Return ONLY the SQL query, nothing else. No explanation, no markdown, just the raw SQL."""
 
-    response = client.messages.create(
+    response = _get_client().messages.create(
         model=MODEL_NAME,
         max_tokens=500,
         messages=[{"role": "user", "content": prompt}],
@@ -91,7 +95,7 @@ Results: {results_text}
 
 Provide a concise, friendly answer based on the results. Use plain text only - no markdown formatting or special characters."""
 
-    response = client.messages.create(
+    response = _get_client().messages.create(
         model=MODEL_NAME,
         max_tokens=500,
         messages=[{"role": "user", "content": prompt}],
@@ -144,7 +148,7 @@ Rules:
 - Return ONLY the JSON, no explanation."""
 
     try:
-        response = client.messages.create(
+        response = _get_client().messages.create(
             model=MODEL_NAME,
             max_tokens=300,
             messages=[{"role": "user", "content": prompt}],
