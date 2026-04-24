@@ -1,0 +1,81 @@
+Date,Campaign_Name,Ad_Set_Name,Placement,Objective,Impressions,Reach,Clicks,Spend,CTR,CPC,Conversions,Conversion_Rate,Revenue,ROAS,Frequency
+2024-01-03,Video Views - Product Demo,CA - All Ages,Reels,Video Views,24973,22269,420,1083.95,1.682,2.58,14,3.33,2413.95,2.23,1.67
+2024-01-04,Spring Sale 2024,UK - 25-44,Stories,Conversions,37092,32625,1647,1375.9,4.44,0.84,197,11.96,19903.96,14.47,2.41
+2024-01-06,Retargeting - Cart Abandoners,CA - All Ages,Audience Network,Conversions,74827,54353,1784,865.61,2.384,0.49,153,8.58,12925.21,14.93,4.37
+2024-01-08,Brand Awareness Q1,UK - 25-44,Audience Network,Reach,114168,93531,2688,1998.26,2.354,0.74,257,9.56,34913.66,17.47,4.31
+2024-01-09,Brand Awareness Q1,UK - 25-44,Feed,Reach,53434,46325,990,1008.95,1.853,1.02,89,8.99,7018.98,6.96,2.99
+2024-01-10,Video Views - Product Demo,UK - 25-44,Feed,Video Views,95520,85877,3699,594.84,3.872,0.16,409,11.06,32200.36,54.13,3.02
+2024-01-10,Spring Sale 2024,UK - 25-44,Reels,Conversions,65068,47702,2015,1273.55,3.097,0.63,66,3.28,7455.16,5.85,2.29
+2024-01-12,Brand Awareness Q1,UK - 25-44,Audience Network,Reach,35495,26802,947,136.26,2.668,0.14,43,4.54,5557.03,40.78,3.1
+2024-01-14,Retargeting - Cart Abandoners,US - 18-34,Stories,Conversions,107251,101250,3079,1934.39,2.871,0.63,451,14.65,64797.09,33.5,3.86
+2024-01-14,Brand Awareness Q1,UK - 25-44,Feed,Reach,48228,39243,1120,1130.39,2.322,1.01,118,10.54,10981.74,9.72,2.17
+2024-01-15,Spring Sale 2024,UK - 25-44,Reels,Conversions,57521,41489,1506,1303.28,2.618,0.87,164,10.89,9348.07,7.17,1.94
+2024-01-15,Retargeting - Cart Abandoners,US - 25-44,Feed,Conversions,114008,100666,4315,587.64,3.785,0.14,221,5.12,25915.95,44.1,3.87
+2024-01-16,Spring Sale 2024,UK - 25-44,Audience Network,Conversions,87578,63345,2673,587.31,3.052,0.22,108,4.04,12406.14,21.12,4.47
+2024-01-17,Retargeting - Cart Abandoners,US - 25-44,Stories,Conversions,26178,21895,927,1249.56,3.541,1.35,70,7.55,2548.15,2.04,3.94
+2024-01-18,Video Views - Product Demo,CA - All Ages,Feed,Video Views,69686,55483,791,179.89,1.135,0.23,27,3.41,3401.45,18.91,3.13
+2024-01-19,Retargeting - Cart Abandoners,UK - 25-44,Audience Network,Conversions,23301,18419,399,1270.1,1.712,3.18,21,5.26,2515.06,1.98,4.49
+2024-01-20,Retargeting - Cart Abandoners,UK - 25-44,Reels,Conversions,113348,91787,1503,206.43,1.326,0.14,184,12.24,22315.77,108.1,2.69
+2024-01-23,Video Views - Product Demo,US - 25-44,Stories,Video Views,14838,11455,204,946.06,1.375,4.64,22,10.78,2269.02,2.4,2.06
+2024-01-28,Lookalike - High Value Customers,CA - All Ages,Reels,Conversions,47840,43473,980,1944.84,2.048,1.98,55,5.61,9510.85,4.89,2.7
+2024-01-30,Video Views - Product Demo,US - 25-44,Stories,Video Views,81955,67008,3538,2199.09,4.317,0.62,379,10.71,28075.98,12.77,3.32
+2024-01-31,Lookalike - High Value Customers,US - 25-44,Audience Network,Conversions,20713,17903,887,1287.71,4.282,1.45,84,9.47,3424.05,2.66,3.02
+2024-02-03,Brand Awareness Q1,US - 45-65,Audience Network,Reach,81099,69060,3537,642.79,4.361,0.18,120,3.39,11761.41,18.3,2.84
+2024-02-05,Video Views - Product Demo,UK - 25-44,Stories,Video Views,6330,5523,171,485.04,2.701,2.84,8,4.68,751.46,1.55,3.3
+2024-02-07,Lookalike - High Value Customers,UK - 25-44,Stories,Conversions,25730,21276,637,2102.09,2.476,3.3,85,13.34,6221.27,2.96,1.46
+2024-02-07,Brand Awareness Q1,US - 25-44,Reels,Reach,52301,45729,765,109.99,1.463,0.14,68,8.89,5084.71,46.23,1.53
+2024-02-08,Retargeting - Cart Abandoners,CA - All Ages,Stories,Conversions,32549,26943,778,1309.57,2.39,1.68,81,10.41,8296.29,6.34,3.8
+2024-02-08,Lookalike - High Value Customers,UK - 25-44,Stories,Conversions,116863,96068,4790,1851.74,4.099,0.39,430,8.98,60854.43,32.86,2.03
+2024-02-08,Lookalike - High Value Customers,CA - All Ages,Reels,Conversions,40683,34618,1078,1126.85,2.65,1.05,32,2.97,1304.95,1.16,1.19
+2024-02-09,Video Views - Product Demo,US - 18-34,Reels,Video Views,86399,74744,883,2115.43,1.022,2.4,29,3.28,4222.31,2.0,1.63
+2024-02-10,Retargeting - Cart Abandoners,US - 45-65,Audience Network,Conversions,31772,24751,1041,746.07,3.276,0.72,56,5.38,3022.73,4.05,3.66
+2024-02-11,Spring Sale 2024,UK - 25-44,Audience Network,Conversions,106259,85359,2439,1170.94,2.295,0.48,362,14.84,47190.59,40.3,1.74
+2024-02-12,Retargeting - Cart Abandoners,UK - 25-44,Reels,Conversions,118292,110580,1250,1719.45,1.057,1.38,82,6.56,8926.83,5.19,1.49
+2024-02-12,Spring Sale 2024,UK - 25-44,Audience Network,Conversions,72391,55071,1216,1498.23,1.68,1.23,58,4.77,3142.74,2.1,2.71
+2024-02-13,Spring Sale 2024,US - 45-65,Reels,Conversions,69789,64211,2755,465.5,3.948,0.17,131,4.75,19739.83,42.41,3.48
+2024-02-13,Spring Sale 2024,US - 25-44,Stories,Conversions,82110,58860,2339,1327.49,2.849,0.57,48,2.05,6606.57,4.98,1.21
+2024-02-16,Video Views - Product Demo,US - 18-34,Reels,Video Views,104148,84310,2754,1017.13,2.644,0.37,73,2.65,5381.79,5.29,3.47
+2024-02-18,Spring Sale 2024,US - 18-34,Stories,Conversions,117537,82971,2987,503.09,2.541,0.17,416,13.93,35651.4,70.86,1.76
+2024-02-19,Video Views - Product Demo,UK - 25-44,Stories,Video Views,29914,23663,521,1582.62,1.742,3.04,10,1.92,1692.08,1.07,1.34
+2024-02-21,Brand Awareness Q1,US - 25-44,Audience Network,Reach,24342,18371,785,91.76,3.225,0.12,92,11.72,13492.42,147.04,3.83
+2024-02-21,Retargeting - Cart Abandoners,CA - All Ages,Audience Network,Conversions,13675,12597,216,2078.97,1.58,9.62,28,12.96,2257.59,1.09,3.29
+2024-02-22,Brand Awareness Q1,US - 25-44,Feed,Reach,17363,12417,201,993.83,1.158,4.94,15,7.46,1540.78,1.55,3.58
+2024-02-24,Video Views - Product Demo,US - 18-34,Reels,Video Views,48357,35295,1016,1041.94,2.101,1.03,60,5.91,4105.68,3.94,2.92
+2024-02-28,Retargeting - Cart Abandoners,US - 25-44,Stories,Conversions,26319,21937,571,524.15,2.17,0.92,31,5.43,5295.26,10.1,1.93
+2024-02-29,Video Views - Product Demo,UK - 25-44,Reels,Video Views,37953,33859,1667,1904.85,4.392,1.14,35,2.1,4882.66,2.56,2.26
+2024-02-29,Lookalike - High Value Customers,US - 25-44,Stories,Conversions,40382,36563,1801,1436.8,4.46,0.8,166,9.22,22288.67,15.51,3.84
+2024-03-03,Lookalike - High Value Customers,UK - 25-44,Reels,Conversions,108931,89139,940,703.78,0.863,0.75,68,7.23,4778.99,6.79,2.91
+2024-03-03,Spring Sale 2024,CA - All Ages,Stories,Conversions,55968,52899,1143,1519.78,2.042,1.33,82,7.17,4832.38,3.18,2.92
+2024-03-10,Spring Sale 2024,CA - All Ages,Audience Network,Conversions,23136,18109,314,892.03,1.357,2.84,12,3.82,792.28,0.89,2.68
+2024-03-11,Brand Awareness Q1,UK - 25-44,Reels,Reach,30144,24160,710,2073.57,2.355,2.92,76,10.7,12608.92,6.08,3.93
+2024-03-12,Lookalike - High Value Customers,CA - All Ages,Reels,Conversions,84471,77294,2538,1391.05,3.005,0.55,306,12.06,27587.37,19.83,4.47
+2024-03-15,Lookalike - High Value Customers,US - 18-34,Feed,Conversions,70909,60184,2979,1205.99,4.201,0.4,81,2.72,8799.45,7.3,3.4
+2024-03-15,Video Views - Product Demo,US - 25-44,Reels,Video Views,24410,18368,583,168.68,2.388,0.29,39,6.69,6641.61,39.37,1.95
+2024-03-16,Retargeting - Cart Abandoners,US - 18-34,Audience Network,Conversions,47245,39802,1866,1841.15,3.95,0.99,58,3.11,9444.52,5.13,3.37
+2024-03-18,Spring Sale 2024,US - 45-65,Audience Network,Conversions,106946,85467,4097,2125.21,3.831,0.52,139,3.39,5382.55,2.53,3.53
+2024-03-19,Video Views - Product Demo,CA - All Ages,Audience Network,Video Views,60933,46601,2359,1241.49,3.871,0.53,322,13.65,45991.27,37.05,1.94
+2024-03-20,Retargeting - Cart Abandoners,US - 25-44,Stories,Conversions,80674,73947,1219,227.46,1.511,0.19,129,10.58,18975.24,83.42,2.39
+2024-03-21,Retargeting - Cart Abandoners,UK - 25-44,Feed,Conversions,115319,97990,3648,1371.02,3.163,0.38,145,3.97,21106.79,15.39,2.76
+2024-03-22,Retargeting - Cart Abandoners,US - 45-65,Stories,Conversions,105376,80921,3875,1107.35,3.677,0.29,198,5.11,19558.74,17.66,2.19
+2024-03-22,Retargeting - Cart Abandoners,CA - All Ages,Reels,Conversions,71244,50656,1857,1999.31,2.607,1.08,241,12.98,11660.37,5.83,2.23
+2024-03-22,Spring Sale 2024,UK - 25-44,Feed,Conversions,8278,7016,293,599.17,3.54,2.04,11,3.75,548.48,0.92,1.21
+2024-03-22,Lookalike - High Value Customers,UK - 25-44,Audience Network,Conversions,97708,79751,1334,453.41,1.365,0.34,117,8.77,15130.01,33.37,3.91
+2024-03-26,Retargeting - Cart Abandoners,US - 45-65,Audience Network,Conversions,86678,67742,1700,1877.79,1.961,1.1,193,11.35,15159.52,8.07,3.47
+2024-03-30,Video Views - Product Demo,CA - All Ages,Reels,Video Views,65889,61771,649,608.3,0.985,0.94,84,12.94,8499.71,13.97,4.13
+2024-04-05,Video Views - Product Demo,US - 25-44,Feed,Video Views,11826,11085,532,821.92,4.499,1.54,55,10.34,8155.33,9.92,1.78
+2024-04-06,Brand Awareness Q1,UK - 25-44,Audience Network,Reach,98447,71891,1923,2189.72,1.953,1.14,200,10.4,19704.9,9.0,1.86
+2024-04-07,Brand Awareness Q1,UK - 25-44,Reels,Reach,30105,28453,481,1106.5,1.598,2.3,54,11.23,9536.83,8.62,3.93
+2024-04-07,Video Views - Product Demo,UK - 25-44,Audience Network,Video Views,105379,99171,1333,1478.67,1.265,1.11,190,14.25,11199.25,7.57,4.26
+2024-04-10,Video Views - Product Demo,UK - 25-44,Feed,Video Views,91752,81383,3172,408.17,3.457,0.13,185,5.83,32460.63,79.53,1.29
+2024-04-11,Brand Awareness Q1,US - 18-34,Reels,Reach,91356,69079,1017,1172.76,1.113,1.15,104,10.23,8694.64,7.41,1.78
+2024-04-12,Spring Sale 2024,CA - All Ages,Stories,Conversions,37591,34531,567,1216.93,1.508,2.15,21,3.7,1293.72,1.06,1.36
+2024-04-13,Spring Sale 2024,US - 45-65,Feed,Conversions,104458,75542,3950,1560.06,3.781,0.39,253,6.41,14558.77,9.33,1.43
+2024-04-13,Video Views - Product Demo,US - 18-34,Stories,Video Views,17833,14294,176,2198.48,0.987,12.49,22,12.5,3861.1,1.76,2.74
+2024-04-18,Retargeting - Cart Abandoners,CA - All Ages,Feed,Conversions,84131,70502,1496,172.11,1.778,0.12,119,7.95,6318.88,36.71,3.92
+2024-04-20,Lookalike - High Value Customers,US - 18-34,Audience Network,Conversions,14329,10441,479,2038.69,3.343,4.26,58,12.11,7286.74,3.57,1.86
+2024-04-20,Lookalike - High Value Customers,CA - All Ages,Reels,Conversions,12685,10220,178,84.57,1.403,0.48,12,6.74,2032.14,24.03,4.35
+2024-04-21,Lookalike - High Value Customers,US - 18-34,Feed,Conversions,18446,14076,743,1297.02,4.028,1.75,60,8.08,5932.08,4.57,4.03
+2024-04-22,Lookalike - High Value Customers,US - 18-34,Reels,Conversions,8248,6101,120,2039.91,1.455,17.0,14,11.67,1325.78,0.65,3.48
+2024-04-26,Lookalike - High Value Customers,CA - All Ages,Stories,Conversions,82580,58844,2385,137.46,2.888,0.06,246,10.31,13450.4,97.85,2.39
+2024-04-27,Retargeting - Cart Abandoners,CA - All Ages,Reels,Conversions,28788,23090,1292,1004.08,4.488,0.78,162,12.54,28433.11,28.32,2.19
+2024-04-29,Spring Sale 2024,US - 45-65,Stories,Conversions,22601,19875,401,1966.19,1.774,4.9,46,11.47,2646.84,1.35,1.79

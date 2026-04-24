@@ -122,6 +122,18 @@ def extract_filters(question: str, table_name: str) -> list:
             "Campaign_Name, "
             "Month (e.g. January, February)"
         ),
+        "facebook_ads": (
+            "Campaign_Name (e.g. Spring Sale 2024, Brand Awareness Q1, Retargeting - Cart Abandoners), "
+            "Ad_Set_Name (e.g. US - 25-44, UK - 25-44, CA - All Ages), "
+            "Placement (e.g. Feed, Stories, Reels, Audience Network), "
+            "Objective (e.g. Conversions, Reach, Video Views)"
+        ),
+        "vendor_central": (
+            "ASIN (e.g. B08N5WRWNW), "
+            "Product_Title (e.g. PowerBlend Pro Protein Powder), "
+            "Category (e.g. Nutrition, Supplements, Hydration, Fitness Equipment, Recovery), "
+            "Replenishment_Status (e.g. In Stock, Low Stock, Out of Stock)"
+        ),
     }
 
     hint = field_hints.get(table_name, "any relevant field")

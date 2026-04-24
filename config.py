@@ -35,4 +35,26 @@ CSV_SOURCES = {
             "This is campaign-level data, not organized by geographic region."
         ),
     },
+    "facebook_ads": {
+        "path": os.path.join(DATA_DIR, "facebook_ads.csv"),
+        "description": (
+            "Facebook and Instagram paid advertising data at the campaign and ad set level. "
+            "Includes date, campaign name, ad set name, placement (Feed, Stories, Reels, Audience Network), "
+            "objective, impressions, reach, clicks, spend, CTR, CPC, conversions, conversion rate, revenue, ROAS, and frequency. "
+            "Use this source for questions about Facebook ads, Meta ads, Instagram ads, paid social performance, "
+            "ROAS, cost per click, ad spend, campaign ROAS, retargeting performance, lookalike audiences, "
+            "and placement-level breakdowns. Does not contain Google Ads or email data."
+        ),
+    },
+    "vendor_central": {
+        "path": os.path.join(DATA_DIR, "vendor_central.csv"),
+        "description": (
+            "Amazon Vendor Central sales and inventory data at the ASIN and product level. "
+            "Includes date, ASIN, product title, category, ordered units, ordered revenue, shipped units, "
+            "shipped revenue, glance views, conversion rate, customer returns, and replenishment status. "
+            "Use this source for questions about Amazon sales, ASIN performance, product revenue on Amazon, "
+            "glance views, inventory replenishment, customer returns, shipped vs ordered units, "
+            "and product category performance on Amazon. Does not contain Facebook or direct sales data."
+        ),
+    },
 }
