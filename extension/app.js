@@ -107,12 +107,20 @@ async function applyFilters(filters) {
     if (tableauInitPromise) {
       await tableauInitPromise;
     }
-    if (typeof tableau === "undefined" || !tableau.extensions || !tableau.extensions.dashboardContent) {
-      setStatus("Answer ready. Tableau dashboard not accessible.", "success");
+    if (typeof tableau === "undefined") {
+      setStatus("Debug: tableau object undefined.", "error");
+      return;
+    }
+    if (!tableau.extensions) {
+      setStatus("Debug: tableau.extensions missing.", "error");
+      return;
+    }
+    if (!tableau.extensions.dashboardContent) {
+      setStatus("Debug: dashboardContent null (init may have failed).", "error");
       return;
     }
   } catch(e) {
-    setStatus("Answer ready. Tableau dashboard not accessible.", "success");
+    setStatus("Debug: caught error — " + e.message, "error");
     return;
   }
   const dashboard = tableau.extensions.dashboardContent.dashboard;
