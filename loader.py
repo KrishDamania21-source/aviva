@@ -1,22 +1,22 @@
-import sqlite3
+import os
 import pandas as pd
-from config import CSV_SOURCES, DB_PATH
+from sqlalchemy import create_engine, text
+from config import CSV_SOURCES, DATABASE_URL
 
 
-def load_csv_to_table(table_name: str, csv_path: str, conn: sqlite3.Connection):
-    """Read a single CSV file and write it into a SQLite table."""
+def load_csv_to_table(table_name: str, csv_path: str, engine):
+    """Read a single CSV file and write it into a Postgres table."""
     df = pd.read_csv(csv_path)
-    df.to_sql(table_name, conn, if_exists="replace", index=False)
+    df.to_sql(table_name, engine, if_exists="replace", index=False)
     print(f"Loaded '{table_name}' — {len(df)} rows, {len(df.columns)} columns")
 
 
 def load_all_sources():
-    """Load every CSV defined in CSV_SOURCES into the SQLite database."""
-    conn = sqlite3.connect(DB_PATH)
+    """Load every CSV defined in CSV_SOURCES into the Postgres database."""
+    engine = create_engine(DATABASE_URL)
     for table_name, source in CSV_SOURCES.items():
-        load_csv_to_table(table_name, source["path"], conn)
-    conn.close()
-    print(f"\nAll sources loaded into {DB_PATH}")
+        load_csv_to_table(table_name, source["path"], engine)
+    print(f"\nAll sources loaded into Supabase.")
 
 
 if __name__ == "__main__":

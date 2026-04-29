@@ -1,11 +1,11 @@
-import sqlite3
 import os
 import json
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
 from anthropic import Anthropic
-from config import DB_PATH, MODEL_NAME
+from sqlalchemy import create_engine, text
+from config import DATABASE_URL, MODEL_NAME
 from indexer import search_index
 
 # Logging — surfaces errors instead of swallowing them silently
@@ -33,24 +33,22 @@ def _get_client():
 
 
 def get_table_schema(table_name: str) -> str:
-    """Get the schema of a table using PRAGMA table_info."""
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(f"PRAGMA table_info({table_name})")
-    columns = cursor.fetchall()
-    conn.close()
+    """Get the schema of a table from Postgres information_schema."""
+    engine = create_engine(DATABASE_URL)
+    with engine.connect() as conn:
+        result = conn.execute(text(
+            "SELECT column_name, data_type FROM information_schema.columns "
+            "WHERE table_name = :table ORDER BY ordinal_position"
+        ), {"table": table_name})
+        columns = result.fetchall()
 
-    schema_lines = []
-    for col in columns:
-        col_name, col_type = col[1], col[2]
-        schema_lines.append(f"  {col_name} ({col_type})")
-
+    schema_lines = [f"  {col[0]} ({col[1]})" for col in columns]
     return "\n".join(schema_lines)
 
 
 def generate_sql(question: str, table_name: str, schema: str) -> str:
     """Ask Claude to generate SQL for the question."""
-    prompt = f"""You are a SQL expert. Generate a SQLite SQL query to answer this question.
+    prompt = f"""You are a SQL expert. Generate a PostgreSQL query to answer this question.
 
 Table: {table_name}
 Schema:
@@ -70,20 +68,19 @@ Return ONLY the SQL query, nothing else. No explanation, no markdown, just the r
 
 
 def execute_sql(sql: str) -> list:
-    """Execute SQL against the database."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute(sql)
-    results = cursor.fetchall()
-    conn.close()
-    return results
+    """Execute SQL against the Postgres database."""
+    engine = create_engine(DATABASE_URL)
+    with engine.connect() as conn:
+        result = conn.execute(text(sql))
+        keys = result.keys()
+        rows = [dict(zip(keys, row)) for row in result.fetchall()]
+    return rows
 
 
 def format_answer(question: str, sql: str, results: list) -> str:
     """Ask Claude to format the results as a natural language answer."""
     if results:
-        results_text = "\n".join([str(dict(row)) for row in results])
+        results_text = "\n".join([str(row) for row in results])
     else:
         results_text = "No results found"
 
@@ -215,7 +212,7 @@ def answer_question(question: str) -> dict:
             "answer": answer,
             "sql": sql,
             "table_name": table_name,
-            "results": [dict(row) for row in results],
+            "results": results,
             "filters": filters,
         }
 

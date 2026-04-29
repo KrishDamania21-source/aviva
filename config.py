@@ -6,8 +6,10 @@ load_dotenv()
 # Paths
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
-DB_PATH = os.path.join(DATA_DIR, "sales.db")
 FAISS_INDEX_DIR = os.path.join(DATA_DIR, "faiss_index")
+
+# Database — Supabase Postgres
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 # Anthropic
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
