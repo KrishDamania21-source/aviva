@@ -13,6 +13,7 @@ def load_csv_to_table(table_name: str, csv_path: str, engine):
 
 def load_all_sources():
     """Load every CSV defined in CSV_SOURCES into the Postgres database."""
+    print(f"DATABASE_URL starts with: {DATABASE_URL[:30] if DATABASE_URL else 'EMPTY'}")
     engine = create_engine(DATABASE_URL)
     for table_name, source in CSV_SOURCES.items():
         load_csv_to_table(table_name, source["path"], engine)
