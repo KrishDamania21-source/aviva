@@ -1,7 +1,7 @@
 import os
 import pandas as pd
-from sqlalchemy import create_engine, text
-from config import CSV_SOURCES, DATABASE_URL
+from sqlalchemy import create_engine
+from config import CSV_SOURCES
 
 
 def load_csv_to_table(table_name: str, csv_path: str, engine):
@@ -13,8 +13,12 @@ def load_csv_to_table(table_name: str, csv_path: str, engine):
 
 def load_all_sources():
     """Load every CSV defined in CSV_SOURCES into the Postgres database."""
-    print(f"DATABASE_URL starts with: {DATABASE_URL[:30] if DATABASE_URL else 'EMPTY'}")
-    engine = create_engine(DATABASE_URL)
+    # Read directly from environment to avoid import-time config issues
+    db_url = os.environ.get("DATABASE_URL", "")
+    print(f"DATABASE_URL starts with: {db_url[:30] if db_url else 'EMPTY'}")
+    if not db_url:
+        raise ValueError("DATABASE_URL environment variable is not set.")
+    engine = create_engine(db_url)
     for table_name, source in CSV_SOURCES.items():
         load_csv_to_table(table_name, source["path"], engine)
     print(f"\nAll sources loaded into Supabase.")
