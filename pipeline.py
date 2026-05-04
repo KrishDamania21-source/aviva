@@ -219,7 +219,7 @@ def answer_question(question: str) -> dict:
     except Exception as e:
         logger.error(f"Pipeline error: {e}", exc_info=True)
         return {
-            "answer": "I could not answer that question from the available data.",
+            "answer": f"Pipeline error: {type(e).__name__}: {e}",
             "sql": None,
             "table_name": None,
             "results": None,
