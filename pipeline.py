@@ -56,6 +56,8 @@ Schema:
 
 Question: {question}
 
+IMPORTANT: PostgreSQL is case-sensitive. Column names must be wrapped in double quotes exactly as shown in the schema above (e.g. "Product_Title", "Ordered_Revenue"). Never reference a column without double quotes.
+
 Return ONLY the SQL query, nothing else. No explanation, no markdown, just the raw SQL."""
 
     response = _get_client().messages.create(

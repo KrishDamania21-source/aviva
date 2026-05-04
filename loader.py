@@ -7,6 +7,8 @@ from config import CSV_SOURCES
 def load_csv_to_table(table_name: str, csv_path: str, engine):
     """Read a single CSV file and write it into a Postgres table."""
     df = pd.read_csv(csv_path)
+    # Lowercase all column names — avoids case-sensitivity issues in PostgreSQL
+    df.columns = [c.lower() for c in df.columns]
     df.to_sql(table_name, engine, if_exists="replace", index=False)
     print(f"Loaded '{table_name}' — {len(df)} rows, {len(df.columns)} columns")
 
