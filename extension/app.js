@@ -227,20 +227,26 @@ function hideAnswer() {
   copyBtn.classList.remove("visible");
 }
 
-async function handleCopy() {
+function handleCopy() {
   const text = answerText.textContent;
   if (!text) return;
-  try {
-    await navigator.clipboard.writeText(text);
-    copyBtn.textContent = "Copied!";
-    copyBtn.classList.add("copied");
-    setTimeout(() => {
-      copyBtn.textContent = "Copy";
-      copyBtn.classList.remove("copied");
-    }, 2000);
-  } catch (e) {
-    console.warn("Copy failed:", e);
-  }
+
+  // navigator.clipboard is blocked inside Tableau's iframe — use execCommand fallback
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none;";
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  document.execCommand("copy");
+  document.body.removeChild(ta);
+
+  copyBtn.textContent = "Copied!";
+  copyBtn.classList.add("copied");
+  setTimeout(() => {
+    copyBtn.textContent = "Copy";
+    copyBtn.classList.remove("copied");
+  }, 2000);
 }
 
 function setLoading(loading) {
