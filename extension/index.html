@@ -115,6 +115,26 @@
       color: #aab0be;
     }
 
+    /* ── Copy button ── */
+    #copyBtn {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: 1.5px solid #dde1ea;
+      border-radius: 6px;
+      padding: 3px 9px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #888;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    #copyBtn.visible { display: inline-flex; }
+    #copyBtn:hover { border-color: #aab0be; color: #444; }
+    #copyBtn.copied { color: #2f9e44; border-color: #8ce99a; }
+
     /* ── Source badge ── */
     #sourceBadge {
       display: none;
@@ -232,7 +252,10 @@
     <div>
       <div class="answer-header">
         <div class="answer-label">Answer</div>
-        <span id="sourceBadge"></span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span id="sourceBadge"></span>
+          <button id="copyBtn">Copy</button>
+        </div>
       </div>
       <div id="answerText"></div>
     </div>

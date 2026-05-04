@@ -34,6 +34,7 @@ const statusEl       = document.getElementById("status");
 const answerCard     = document.getElementById("answerCard");
 const answerText     = document.getElementById("answerText");
 const sourceBadge    = document.getElementById("sourceBadge");
+const copyBtn        = document.getElementById("copyBtn");
 const filtersSection = document.getElementById("filtersSection");
 const filterPills    = document.getElementById("filterPills");
 const sqlDetails     = document.getElementById("sqlDetails");
@@ -64,6 +65,7 @@ questionInput.addEventListener("keydown", e => {
   if (e.key === "Enter") handleAsk();
 });
 clearBtn.addEventListener("click", handleClear);
+copyBtn.addEventListener("click", handleCopy);
 
 // ── Core handler ──────────────────────────────────────────────────────────────
 async function handleAsk() {
@@ -180,6 +182,11 @@ async function handleClear() {
 function showAnswer(data) {
   answerText.textContent = data.answer;
 
+  // Copy button
+  copyBtn.textContent = "Copy";
+  copyBtn.classList.remove("copied");
+  copyBtn.classList.add("visible");
+
   // Source badge
   if (data.table_name && SOURCE_LABELS[data.table_name]) {
     sourceBadge.textContent = SOURCE_LABELS[data.table_name];
@@ -217,6 +224,23 @@ function hideAnswer() {
   answerCard.classList.remove("visible");
   filtersSection.classList.remove("visible");
   sourceBadge.classList.remove("visible");
+  copyBtn.classList.remove("visible");
+}
+
+async function handleCopy() {
+  const text = answerText.textContent;
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = "Copied!";
+    copyBtn.classList.add("copied");
+    setTimeout(() => {
+      copyBtn.textContent = "Copy";
+      copyBtn.classList.remove("copied");
+    }, 2000);
+  } catch (e) {
+    console.warn("Copy failed:", e);
+  }
 }
 
 function setLoading(loading) {
