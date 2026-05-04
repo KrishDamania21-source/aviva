@@ -5,12 +5,20 @@
  *   1. Tableau initializes the extension
  *   2. User types a question and hits Ask
  *   3. POST /query to the Aviva FastAPI backend
- *   4. Display the answer
+ *   4. Display the answer + source badge
  *   5. Apply any returned filters to every worksheet in the dashboard
  *   6. Clear button removes all Aviva-applied filters
  */
 
 const API_URL = "https://aviva-api.onrender.com";
+
+// Human-readable labels for each data source
+const SOURCE_LABELS = {
+  sales_data:      "Sales",
+  marketing_data:  "Marketing",
+  facebook_ads:    "Facebook Ads",
+  vendor_central:  "Amazon Vendor Central",
+};
 
 // Track which filters Aviva has applied so Clear can remove them cleanly
 let appliedFilters = [];
@@ -25,6 +33,7 @@ const askBtn         = document.getElementById("askBtn");
 const statusEl       = document.getElementById("status");
 const answerCard     = document.getElementById("answerCard");
 const answerText     = document.getElementById("answerText");
+const sourceBadge    = document.getElementById("sourceBadge");
 const filtersSection = document.getElementById("filtersSection");
 const filterPills    = document.getElementById("filterPills");
 const sqlDetails     = document.getElementById("sqlDetails");
@@ -69,7 +78,6 @@ async function handleAsk() {
   hideAnswer();
 
   try {
-    // 1. Call Aviva API
     const response = await fetch(`${API_URL}/query`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -82,14 +90,14 @@ async function handleAsk() {
 
     const data = await response.json();
 
-    // 2. Display answer
+    // Display answer + source badge
     showAnswer(data);
 
-    // 3. Apply filters to Tableau dashboard
+    // Apply filters to Tableau dashboard
     if (data.filters && data.filters.length > 0) {
       await applyFilters(data.filters);
     } else {
-      setStatus("Answer ready. No filters applied.", "success");
+      setStatus("Answer ready.", "success");
     }
 
   } catch (err) {
@@ -102,54 +110,35 @@ async function handleAsk() {
 
 // ── Apply filters to all worksheets ──────────────────────────────────────────
 async function applyFilters(filters) {
-  try {
-    // Wait for Tableau to finish initializing before accessing dashboardContent
-    if (tableauInitPromise) {
-      await tableauInitPromise;
-    }
-    if (typeof tableau === "undefined") {
-      setStatus("Debug: tableau object undefined.", "error");
-      return;
-    }
-    if (!tableau.extensions) {
-      setStatus("Debug: tableau.extensions missing.", "error");
-      return;
-    }
-    if (!tableau.extensions.dashboardContent) {
-      setStatus("Debug: dashboardContent null (init may have failed).", "error");
-      return;
-    }
-  } catch(e) {
-    setStatus("Debug: caught error — " + e.message, "error");
+  // Wait for Tableau to finish initializing before accessing dashboardContent
+  if (tableauInitPromise) {
+    try { await tableauInitPromise; } catch (e) { /* init failed, filters skipped */ }
+  }
+
+  if (typeof tableau === "undefined" || !tableau.extensions || !tableau.extensions.dashboardContent) {
+    setStatus("Answer ready.", "success");
     return;
   }
+
   const dashboard = tableau.extensions.dashboardContent.dashboard;
   const worksheets = dashboard.worksheets;
 
   appliedFilters = filters;
 
   let applied = 0;
-  let errors = [];
+  const errors = [];
 
   for (const worksheet of worksheets) {
     for (const filter of filters) {
       try {
-        // Use string literal for FilterUpdateType — more reliable across Tableau versions
-        await worksheet.applyFilterAsync(
-          filter.field,
-          filter.values,
-          "replace"
-        );
+        await worksheet.applyFilterAsync(filter.field, filter.values, "replace");
         applied++;
       } catch (e) {
-        // Silently skip "invalid-fields" errors — this just means the sheet
-        // doesn't have this dimension (e.g. Campaign_Name on a sales sheet).
-        // Only track errors that are unexpected failures, not missing fields.
+        // Silently skip sheets that don't have this dimension
         const msg = e.message || "";
         if (!msg.includes("invalid-fields") && !msg.includes("parameterError")) {
           errors.push(`${worksheet.name}/${filter.field}: ${msg}`);
         }
-        console.warn(`Filter skipped on "${worksheet.name}" field "${filter.field}":`, e);
       }
     }
   }
@@ -191,6 +180,14 @@ async function handleClear() {
 function showAnswer(data) {
   answerText.textContent = data.answer;
 
+  // Source badge
+  if (data.table_name && SOURCE_LABELS[data.table_name]) {
+    sourceBadge.textContent = SOURCE_LABELS[data.table_name];
+    sourceBadge.classList.add("visible");
+  } else {
+    sourceBadge.classList.remove("visible");
+  }
+
   // SQL
   if (data.sql) {
     sqlText.textContent = data.sql;
@@ -219,6 +216,7 @@ function showAnswer(data) {
 function hideAnswer() {
   answerCard.classList.remove("visible");
   filtersSection.classList.remove("visible");
+  sourceBadge.classList.remove("visible");
 }
 
 function setLoading(loading) {

@@ -101,6 +101,12 @@
     }
     #answerCard.visible { display: flex; }
 
+    .answer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
     .answer-label {
       font-size: 10px;
       font-weight: 700;
@@ -108,6 +114,31 @@
       letter-spacing: 0.6px;
       color: #aab0be;
     }
+
+    /* ── Source badge ── */
+    #sourceBadge {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      background: #f3f0ff;
+      color: #6741d9;
+      border: 1px solid #d0bfff;
+      border-radius: 20px;
+      padding: 2px 9px;
+      font-size: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    #sourceBadge.visible { display: inline-flex; }
+    #sourceBadge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #6741d9;
+      flex-shrink: 0;
+    }
+
     #answerText {
       font-size: 13px;
       line-height: 1.6;
@@ -199,7 +230,10 @@
 
   <div id="answerCard">
     <div>
-      <div class="answer-label">Answer</div>
+      <div class="answer-header">
+        <div class="answer-label">Answer</div>
+        <span id="sourceBadge"></span>
+      </div>
       <div id="answerText"></div>
     </div>
 
