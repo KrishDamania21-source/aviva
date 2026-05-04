@@ -1,12 +1,8 @@
 anthropic
 python-dotenv
-faiss-cpu
 pandas
 streamlit
-sentence-transformers
 fastapi
 uvicorn[standard]
 sqlalchemy
 psycopg2-binary
---extra-index-url https://download.pytorch.org/whl/cpu
-torch
