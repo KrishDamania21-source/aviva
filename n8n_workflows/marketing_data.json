@@ -1,0 +1,101 @@
+{
+  "name": "Aviva — Refresh Marketing Data",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "refresh-marketing-data",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-mkt",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "refresh-marketing-data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const channels = ['Google Ads', 'Facebook', 'Instagram', 'LinkedIn', 'Email'];\nconst months = ['January', 'February', 'March', 'April', 'May', 'June'];\nconst campaignNames = {\n  'Google Ads': ['Search - Brand', 'Search - Generic', 'Shopping Campaign'],\n  'Facebook': ['Prospecting Q1', 'Retargeting - Cart', 'Lookalike Audiences'],\n  'Instagram': ['Stories - Product', 'Reels Campaign', 'Feed - Lifestyle'],\n  'LinkedIn': ['B2B Awareness', 'Lead Gen Form', 'Sponsored Content'],\n  'Email': ['Welcome Series', 'Win-Back Campaign', 'Weekly Newsletter']\n};\n\nconst rows = [];\n\nfor (const month of months) {\n  for (const channel of channels) {\n    const campaigns = campaignNames[channel];\n    for (const campaign of campaigns) {\n      const spend = parseFloat((Math.random() * 5000 + 500).toFixed(2));\n      const impressions = Math.floor(Math.random() * 200000 + 10000);\n      const clicks = Math.floor(impressions * (Math.random() * 0.05 + 0.01));\n      const conversions = Math.floor(clicks * (Math.random() * 0.1 + 0.02));\n      const revenue = parseFloat((conversions * (Math.random() * 150 + 50)).toFixed(2));\n\n      rows.push({\n        campaign_name: campaign,\n        channel,\n        month,\n        spend,\n        impressions,\n        clicks,\n        conversions,\n        revenue\n      });\n    }\n  }\n}\n\nreturn [{ json: { data: rows, count: rows.length } }];"
+      },
+      "id": "node-code-mkt",
+      "name": "Generate Marketing Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/marketing_data?campaign_name=neq.null",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-delete-mkt",
+      "name": "Clear Existing Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/marketing_data",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($('Generate Marketing Data').first().json.data) }}",
+        "options": {}
+      },
+      "id": "node-insert-mkt",
+      "name": "Insert to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"source\": \"marketing_data\", \"rows\": {{ $('Generate Marketing Data').first().json.count }} }"
+      },
+      "id": "node-respond-mkt",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Generate Marketing Data", "type": "main", "index": 0 }]]
+    },
+    "Generate Marketing Data": {
+      "main": [[{ "node": "Clear Existing Data", "type": "main", "index": 0 }]]
+    },
+    "Clear Existing Data": {
+      "main": [[{ "node": "Insert to Supabase", "type": "main", "index": 0 }]]
+    },
+    "Insert to Supabase": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": true }
+}

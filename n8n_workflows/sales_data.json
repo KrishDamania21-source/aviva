@@ -1,0 +1,101 @@
+{
+  "name": "Aviva — Refresh Sales Data",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "refresh-sales-data",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-sales",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "refresh-sales-data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate realistic sales data — randomized on each run so data looks fresh\nconst regions = ['East', 'West', 'North', 'South'];\nconst reps = ['Sarah Chen', 'Mike Johnson', 'Emily Davis', 'Robert Kim', 'Lisa Park'];\nconst categories = ['Widgets', 'Gadgets', 'Accessories', 'Software'];\nconst products = ['Widget Pro', 'Widget Lite', 'Gadget Max', 'Gadget Mini', 'AccessKit', 'SoftSuite'];\nconst customers = ['Acme Corp', 'TechStart Inc', 'Global Solutions', 'Prime Retail', 'FastGrow LLC', 'Apex Systems', 'Blue Ridge Co'];\n\nconst rows = [];\nconst now = new Date();\n\nfor (let i = 0; i < 100; i++) {\n  const daysAgo = Math.floor(Math.random() * 90);\n  const date = new Date(now.getTime() - daysAgo * 86400000);\n  const qty = Math.floor(Math.random() * 20) + 1;\n  const unitPrice = parseFloat((Math.random() * 200 + 10).toFixed(2));\n  \n  rows.push({\n    order_id: `ORD-${date.toISOString().split('T')[0]}-${String(i).padStart(3,'0')}`,\n    date: date.toISOString().split('T')[0],\n    customer_name: customers[Math.floor(Math.random() * customers.length)],\n    product: products[Math.floor(Math.random() * products.length)],\n    category: categories[Math.floor(Math.random() * categories.length)],\n    quantity: qty,\n    unit_price: unitPrice,\n    total_amount: parseFloat((qty * unitPrice).toFixed(2)),\n    region: regions[Math.floor(Math.random() * regions.length)],\n    sales_rep: reps[Math.floor(Math.random() * reps.length)]\n  });\n}\n\nreturn [{ json: { data: rows, count: rows.length } }];"
+      },
+      "id": "node-code-sales",
+      "name": "Generate Sales Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/sales_data?order_id=neq.null",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-delete-sales",
+      "name": "Clear Existing Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/sales_data",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($('Generate Sales Data').first().json.data) }}",
+        "options": {}
+      },
+      "id": "node-insert-sales",
+      "name": "Insert to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"source\": \"sales_data\", \"rows\": {{ $('Generate Sales Data').first().json.count }} }"
+      },
+      "id": "node-respond-sales",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Generate Sales Data", "type": "main", "index": 0 }]]
+    },
+    "Generate Sales Data": {
+      "main": [[{ "node": "Clear Existing Data", "type": "main", "index": 0 }]]
+    },
+    "Clear Existing Data": {
+      "main": [[{ "node": "Insert to Supabase", "type": "main", "index": 0 }]]
+    },
+    "Insert to Supabase": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": true }
+}

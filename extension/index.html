@@ -187,9 +187,15 @@
     }
     .pill-field { font-weight: 700; }
 
+    /* ── Action buttons row ── */
+    .action-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     /* ── Clear button ── */
     #clearBtn {
-      align-self: flex-start;
       background: none;
       border: 1.5px solid #dde1ea;
       border-radius: 6px;
@@ -200,6 +206,25 @@
       transition: border-color 0.2s;
     }
     #clearBtn:hover { border-color: #aab0be; }
+
+    /* ── Refresh button ── */
+    #refreshBtn {
+      background: none;
+      border: 1.5px solid #d0bfff;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 11px;
+      color: #6741d9;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    #refreshBtn:hover { border-color: #9775fa; }
+    #refreshBtn:disabled { opacity: 0.5; cursor: default; }
+    #refreshBtn.refreshing { color: #888; border-color: #dde1ea; }
 
     /* ── SQL expander ── */
     details {
@@ -270,7 +295,10 @@
       <pre id="sqlText"></pre>
     </details>
 
-    <button id="clearBtn">Clear filters</button>
+    <div class="action-row">
+      <button id="clearBtn">Clear filters</button>
+      <button id="refreshBtn">⟳ Refresh data</button>
+    </div>
   </div>
 
   <script src="app.js"></script>

@@ -35,6 +35,7 @@ const answerCard     = document.getElementById("answerCard");
 const answerText     = document.getElementById("answerText");
 const sourceBadge    = document.getElementById("sourceBadge");
 const copyBtn        = document.getElementById("copyBtn");
+const refreshBtn     = document.getElementById("refreshBtn");
 const filtersSection = document.getElementById("filtersSection");
 const filterPills    = document.getElementById("filterPills");
 const sqlDetails     = document.getElementById("sqlDetails");
@@ -66,6 +67,7 @@ questionInput.addEventListener("keydown", e => {
 });
 clearBtn.addEventListener("click", handleClear);
 copyBtn.addEventListener("click", handleCopy);
+refreshBtn.addEventListener("click", handleRefresh);
 
 // ── Core handler ──────────────────────────────────────────────────────────────
 async function handleAsk() {
@@ -258,4 +260,40 @@ function setLoading(loading) {
 function setStatus(message, type) {
   statusEl.textContent = message;
   statusEl.className = type || "";
+}
+
+async function handleRefresh() {
+  refreshBtn.disabled = true;
+  refreshBtn.classList.add("refreshing");
+  refreshBtn.textContent = "⟳ Refreshing...";
+  setStatus("Refreshing all data sources...", "");
+
+  try {
+    const response = await fetch(`${API_URL}/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+    const data = await response.json();
+    const allOk = Object.values(data.results).every(v => v === "ok");
+    const notConfigured = Object.values(data.results).every(v => v === "not configured");
+
+    if (notConfigured) {
+      setStatus("Refresh: n8n webhooks not configured yet.", "error");
+    } else if (allOk) {
+      setStatus("All data sources refreshed.", "success");
+    } else {
+      const summary = Object.entries(data.results).map(([k, v]) => `${k}: ${v}`).join(" | ");
+      setStatus(`Refresh complete — ${summary}`, "");
+    }
+  } catch (err) {
+    setStatus("Refresh error: " + err.message, "error");
+  } finally {
+    refreshBtn.disabled = false;
+    refreshBtn.classList.remove("refreshing");
+    refreshBtn.textContent = "⟳ Refresh data";
+  }
 }

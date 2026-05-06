@@ -1,0 +1,101 @@
+{
+  "name": "Aviva — Refresh Vendor Central Data",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "refresh-vendor-central",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-vc",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "refresh-vendor-central"
+    },
+    {
+      "parameters": {
+        "jsCode": "const products = [\n  { asin: 'B08N5WRWNW', title: 'PowerBlend Pro Protein Powder', category: 'Nutrition' },\n  { asin: 'B09K2LMXPQ', title: 'NutriMix Daily Greens Powder 30srv', category: 'Nutrition' },\n  { asin: 'B07XQZR9TK', title: 'HydroMax Electrolyte Tablets', category: 'Hydration' },\n  { asin: 'B08P4WNVJS', title: 'IronCore Resistance Bands Set', category: 'Fitness Equipment' },\n  { asin: 'B09LKRTYUP', title: 'RecoverFast Foam Roller Pro', category: 'Recovery' },\n  { asin: 'B08MNBVCXZ', title: 'SlimFit Compression Leggings', category: 'Apparel' },\n  { asin: 'B07QWERTY12', title: 'MegaWhey Isolate 5lb', category: 'Nutrition' },\n  { asin: 'B09ZXCVBNM', title: 'CorePulse Ab Wheel Roller', category: 'Fitness Equipment' }\n];\nconst statuses = ['In Stock', 'In Stock', 'In Stock', 'Low Stock', 'Out of Stock'];\n\nconst rows = [];\nconst now = new Date();\n\nfor (const product of products) {\n  for (let w = 0; w < 10; w++) {\n    const daysAgo = w * 7 + Math.floor(Math.random() * 3);\n    const date = new Date(now.getTime() - daysAgo * 86400000);\n    const orderedUnits = Math.floor(Math.random() * 300 + 20);\n    const shippedUnits = Math.floor(orderedUnits * (Math.random() * 0.15 + 0.80));\n    const unitPrice = parseFloat((Math.random() * 60 + 15).toFixed(2));\n    const orderedRevenue = parseFloat((orderedUnits * unitPrice).toFixed(2));\n    const shippedRevenue = parseFloat((shippedUnits * unitPrice).toFixed(2));\n    const glanceViews = Math.floor(Math.random() * 5000 + 200);\n    const convRate = parseFloat((orderedUnits / glanceViews * 100).toFixed(2));\n    const returns = Math.floor(shippedUnits * (Math.random() * 0.05));\n\n    rows.push({\n      date: date.toISOString().split('T')[0],\n      asin: product.asin,\n      product_title: product.title,\n      category: product.category,\n      ordered_units: orderedUnits,\n      ordered_revenue: orderedRevenue,\n      shipped_units: shippedUnits,\n      shipped_revenue: shippedRevenue,\n      glance_views: glanceViews,\n      conversion_rate: convRate,\n      customer_returns: returns,\n      replenishment_status: statuses[Math.floor(Math.random() * statuses.length)]\n    });\n  }\n}\n\nreturn [{ json: { data: rows, count: rows.length } }];"
+      },
+      "id": "node-code-vc",
+      "name": "Generate Vendor Central Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/vendor_central?asin=neq.null",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-delete-vc",
+      "name": "Clear Existing Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/vendor_central",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($('Generate Vendor Central Data').first().json.data) }}",
+        "options": {}
+      },
+      "id": "node-insert-vc",
+      "name": "Insert to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"source\": \"vendor_central\", \"rows\": {{ $('Generate Vendor Central Data').first().json.count }} }"
+      },
+      "id": "node-respond-vc",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Generate Vendor Central Data", "type": "main", "index": 0 }]]
+    },
+    "Generate Vendor Central Data": {
+      "main": [[{ "node": "Clear Existing Data", "type": "main", "index": 0 }]]
+    },
+    "Clear Existing Data": {
+      "main": [[{ "node": "Insert to Supabase", "type": "main", "index": 0 }]]
+    },
+    "Insert to Supabase": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": true }
+}
