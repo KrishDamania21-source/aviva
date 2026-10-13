@@ -3,6 +3,13 @@ import pandas as pd
 import altair as alt
 from pipeline import answer_question
 
+SOURCE_LABELS = {
+    "sales_data": "Sales",
+    "marketing_data": "Marketing",
+    "facebook_ads": "Facebook Ads",
+    "vendor_central": "Amazon Vendor Central",
+}
+
 st.set_page_config(page_title="Aviva", layout="centered")
 
 # Fix word wrap in st.code blocks
@@ -18,9 +25,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Sidebar — demo controls
+with st.sidebar:
+    simulate_bad_sql = st.toggle("Demo: simulate a bad first query", value=False)
+    if simulate_bad_sql:
+        st.caption("The first generated query gets one column name misspelled, "
+                   "so the self-correction path runs live.")
+
 # Header
 st.title("Aviva")
-st.markdown("*Ask your sales data anything*")
+st.markdown("*Ask your sales and marketing data anything*")
 st.markdown("---")
 
 # Input section
@@ -29,72 +43,86 @@ question = st.text_input(
     placeholder="e.g., Who is the top performing sales rep?",
 )
 
+
+def source_label(table: str | None) -> str:
+    return f"{SOURCE_LABELS.get(table, table)} · `{table}`" if table else "—"
+
+
+def render_chart(rows: list[dict]):
+    """Bar chart for multi-row results: first text column vs first numeric column."""
+    if not rows or len(rows) < 2 or len(rows) > 50:
+        return
+    df = pd.DataFrame([dict(r) for r in rows])
+    numeric, text = [], []
+    for col in df.columns:
+        converted = pd.to_numeric(df[col], errors="coerce")
+        if converted.notna().all():
+            df[col] = converted
+            numeric.append(col)
+        else:
+            text.append(col)
+    if not text or not numeric:
+        return
+    x, y = text[0], numeric[0]
+    chart = alt.Chart(df).mark_bar().encode(
+        x=alt.X(f"{x}:N", sort="-y", title=x),
+        y=alt.Y(f"{y}:Q", title=y),
+        tooltip=[x, y],
+    ).properties(height=300)
+    st.altair_chart(chart, use_container_width=True)
+
+
 # Submit button
 if st.button("Ask", type="primary", use_container_width=True):
     if question.strip():
-        # Show spinner while processing
         with st.spinner("Analyzing your question..."):
-            result = answer_question(question)
+            result = answer_question(question, simulate_bad_sql=simulate_bad_sql,
+                                     extract_tableau_filters=False)
 
-        # Show answer with copy button
-        st.markdown("### Answer")
-        st.text_area(
-            label="Answer",
-            value=result["answer"],
-            disabled=True,
-            label_visibility="collapsed",
-            height=150
-        )
+        # 1. Routing decision
+        routing = result.get("routing")
+        if routing:
+            with st.container(border=True):
+                st.caption("ROUTING DECISION")
+                st.markdown(f"**→ {source_label(routing['table'])}**")
+                if routing.get("reason"):
+                    st.markdown(f"*{routing['reason'].replace('$', chr(92) + '$')}*")
+                if routing.get("runner_up"):
+                    st.caption(f"Runner-up: {source_label(routing['runner_up'])}")
 
-        # Show data source in expander
-        table_name = result.get("table_name")
-        if table_name:
-            with st.expander("View Data Source"):
-                st.markdown(f"**Table:** `{table_name}`")
+        # 2. Answer
+        header = "### Answer"
+        if result.get("retried") and not result.get("blocked") and result.get("results") is not None:
+            header += " &nbsp; :orange-badge[:material/healing: Self-corrected]"
+        st.markdown(header)
+        answer_md = result["answer"].replace("$", "\\$")  # stop Streamlit treating $ as LaTeX
+        if result.get("blocked") or result.get("results") is None:
+            st.warning(answer_md)
+        else:
+            with st.container(border=True):
+                st.markdown(answer_md)
 
-        # Show SQL in expander
-        if result["sql"]:
-            with st.expander("View SQL Query"):
+        # 3. Chart
+        rows = result.get("results")
+        render_chart(rows)
+
+        # 4. Row count + collapsibles
+        if rows is not None:
+            st.caption(f"{len(rows)} row{'s' if len(rows) != 1 else ''} returned")
+
+        if result.get("sql"):
+            with st.expander("Generated SQL"):
                 st.code(result["sql"], language="sql")
 
-        # Show chart if applicable
-        if result.get("results") and len(result["results"]) >= 2:
-            table_name = result.get("table_name")
-            results = result["results"]
-
-            with st.expander("View Chart"):
-                # Convert results to DataFrame
-                df = pd.DataFrame([dict(row) for row in results])
-
-                if table_name == "sales_data" and "region" in df.columns:
-                    # Find revenue column (could be total_amount, total_sales, etc.)
-                    revenue_col = next(
-                        (col for col in df.columns if "total" in col.lower() or "amount" in col.lower()),
-                        None
-                    )
-                    if revenue_col:
-                        chart_data = df.groupby("region")[revenue_col].sum().reset_index()
-                        chart_data.columns = ["Region", "Revenue"]
-                        chart = alt.Chart(chart_data).mark_bar().encode(
-                            x=alt.X("Region", sort="-y"),
-                            y="Revenue"
-                        ).properties(width=600, height=300)
-                        st.altair_chart(chart, use_container_width=True)
-
-                elif table_name == "marketing_data" and "channel" in df.columns:
-                    # Find revenue column (could be revenue, total_revenue, etc.)
-                    revenue_col = next(
-                        (col for col in df.columns if "revenue" in col.lower()),
-                        None
-                    )
-                    if revenue_col:
-                        chart_data = df.groupby("channel")[revenue_col].sum().reset_index()
-                        chart_data.columns = ["Channel", "Revenue"]
-                        chart = alt.Chart(chart_data).mark_bar().encode(
-                            x=alt.X("Channel", sort="-y"),
-                            y="Revenue"
-                        ).properties(width=600, height=300)
-                        st.altair_chart(chart, use_container_width=True)
+        if result.get("retried"):
+            with st.expander("Self-correction details"):
+                if result.get("simulated"):
+                    st.caption("Demo toggle was on: this first query was deliberately corrupted.")
+                st.markdown("**First query (failed)**")
+                st.code(result.get("first_sql") or "", language="sql")
+                st.markdown("**Postgres error**")
+                st.code(result.get("first_error") or "", language="text")
+                st.markdown("**Corrected query** is shown under *Generated SQL*.")
 
     else:
         st.warning("Please enter a question")

@@ -1,0 +1,110 @@
+{
+  "_comment": "Aviva credential broker — POST {mode, connection, sql} -> {rows}. Import into n8n, attach real credentials to each DB node, then set N8N_QUERY_WEBHOOK in Render to the production URL of the Webhook node.",
+  "name": "Aviva — Execute Query (Credential Broker)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aviva-execute-query",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// PLACEHOLDER — verify X-Aviva-Secret header matches the value stored as a\n// Credential or env var in n8n. Reject the call if it doesn't.\nconst incoming = $input.first().json.headers?.['x-aviva-secret'];\nconst expected = $env.AVIVA_SHARED_SECRET || '';\nif (expected && incoming !== expected) {\n  throw new Error('Unauthorized — bad shared secret');\n}\nreturn $input.all();"
+      },
+      "name": "Verify Secret",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{$json.body.connection}}",
+        "rules": {
+          "rules": [
+            {"value2": "snowflake-prod", "output": 0},
+            {"value2": "bigquery-analytics", "output": 1},
+            {"value2": "postgres-warehouse", "output": 2}
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "name": "Route by Connection",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "_comment": "PLACEHOLDER — replace this with the Snowflake node and attach a Snowflake credential in n8n.",
+        "operation": "executeQuery",
+        "query": "={{$json.body.sql}}"
+      },
+      "name": "Snowflake (placeholder)",
+      "type": "n8n-nodes-base.snowflake",
+      "typeVersion": 1,
+      "position": [800, 200],
+      "credentials": {
+        "snowflake": {"id": "REPLACE_ME", "name": "Snowflake Prod"}
+      }
+    },
+    {
+      "parameters": {
+        "_comment": "PLACEHOLDER — replace with the Google BigQuery node and attach service-account credentials.",
+        "operation": "executeQuery",
+        "query": "={{$json.body.sql}}"
+      },
+      "name": "BigQuery (placeholder)",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {"id": "REPLACE_ME", "name": "BigQuery Analytics"}
+      }
+    },
+    {
+      "parameters": {
+        "_comment": "PLACEHOLDER — Postgres credential attaches here.",
+        "operation": "executeQuery",
+        "query": "={{$json.body.sql}}"
+      },
+      "name": "Postgres (placeholder)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [800, 400],
+      "credentials": {
+        "postgres": {"id": "REPLACE_ME", "name": "Postgres Warehouse"}
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize the DB node output into { rows: [...] } so Aviva's broker\n// client can parse a single shape regardless of source.\nconst items = $input.all();\nconst rows = items.map(i => i.json);\nreturn [{ json: { rows } }];"
+      },
+      "name": "Normalize Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {"main": [[{"node": "Verify Secret", "type": "main", "index": 0}]]},
+    "Verify Secret": {"main": [[{"node": "Route by Connection", "type": "main", "index": 0}]]},
+    "Route by Connection": {
+      "main": [
+        [{"node": "Snowflake (placeholder)", "type": "main", "index": 0}],
+        [{"node": "BigQuery (placeholder)", "type": "main", "index": 0}],
+        [{"node": "Postgres (placeholder)", "type": "main", "index": 0}]
+      ]
+    },
+    "Snowflake (placeholder)": {"main": [[{"node": "Normalize Response", "type": "main", "index": 0}]]},
+    "BigQuery (placeholder)":  {"main": [[{"node": "Normalize Response", "type": "main", "index": 0}]]},
+    "Postgres (placeholder)":  {"main": [[{"node": "Normalize Response", "type": "main", "index": 0}]]}
+  }
+}

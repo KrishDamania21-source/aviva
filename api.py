@@ -15,6 +15,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pipeline import answer_question
+import session_store
+import n8n_broker
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,9 @@ N8N_WEBHOOKS = {
 # ── Models ────────────────────────────────────────────────────────────────────
 class QueryRequest(BaseModel):
     question: str
+    workbook_context: dict | None = None
+    connection: str | None = None       # n8n broker connection name
+    session_id: str | None = None       # DuckDB session id
 
 
 class FilterSpec(BaseModel):
@@ -57,6 +62,7 @@ class QueryResponse(BaseModel):
     sql: str | None
     table_name: str | None
     filters: list[FilterSpec]
+    mode: str | None = None
 
 
 class RefreshRequest(BaseModel):
@@ -65,6 +71,28 @@ class RefreshRequest(BaseModel):
 
 class RefreshResponse(BaseModel):
     results: dict[str, str]
+
+
+class SheetData(BaseModel):
+    name: str
+    columns: list[str]
+    rows: list[list]
+
+
+class LoadSessionRequest(BaseModel):
+    session_id: str
+    sheets: list[SheetData]
+
+
+class LoadSessionResponse(BaseModel):
+    session_id: str
+    tables: list[str]
+
+
+class IngestRequest(BaseModel):
+    """PLACEHOLDER for .twbx URL ingestion. See /ingest-workbook."""
+    url: str | None = None
+    session_id: str | None = None
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -83,13 +111,73 @@ def query(request: QueryRequest):
     if not request.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
 
-    result = answer_question(request.question)
+    result = answer_question(
+        request.question,
+        workbook_context=request.workbook_context,
+        connection=request.connection,
+        session_id=request.session_id,
+    )
 
     return QueryResponse(
         answer=result["answer"],
         sql=result.get("sql"),
         table_name=result.get("table_name"),
         filters=[FilterSpec(**f) for f in result.get("filters", [])],
+        mode=result.get("mode"),
+    )
+
+
+@app.get("/connections")
+def connections():
+    """List configured n8n broker connections for the extension's picker.
+    Returns [] if the broker is unconfigured — extension falls back to session/demo modes."""
+    return {
+        "configured": n8n_broker.is_configured(),
+        "connections": n8n_broker.list_connections(),
+    }
+
+
+@app.post("/load-session", response_model=LoadSessionResponse)
+def load_session(request: LoadSessionRequest):
+    """
+    The extension pushes worksheet snapshots here. Aviva materializes them as
+    DuckDB tables keyed by session_id; subsequent /query calls referencing the
+    same session_id run SQL against this in-memory data.
+    """
+    if not request.session_id:
+        raise HTTPException(400, "session_id required")
+    if not request.sheets:
+        raise HTTPException(400, "at least one sheet required")
+    result = session_store.load_session(
+        request.session_id,
+        [s.model_dump() for s in request.sheets],
+    )
+    return LoadSessionResponse(**result)
+
+
+@app.delete("/load-session/{session_id}")
+def drop_session(session_id: str):
+    """Free a session's DuckDB instance — called when the extension unloads."""
+    dropped = session_store.drop_session(session_id)
+    return {"dropped": dropped}
+
+
+@app.post("/ingest-workbook")
+def ingest_workbook(request: IngestRequest):
+    """
+    PLACEHOLDER — accept a .twbx URL, hand off to n8n for download/extraction,
+    materialize the embedded Hyper extract into a DuckDB session.
+
+    Implementation outline (not wired yet):
+      1. POST to N8N_INGEST_WEBHOOK with {url, session_id}
+      2. n8n: HTTP download -> unzip -> read .hyper via tableauhyperapi -> CSV/Parquet
+      3. n8n calls back POST /load-session with the extracted sheets
+      4. Aviva responds 202 immediately; extension polls /load-session/{id}/status
+    """
+    raise HTTPException(
+        501,
+        "Workbook ingestion not yet implemented. "
+        "See n8n_workflows/ingest_twbx.json (TODO) and IngestRequest in api.py.",
     )
 
 

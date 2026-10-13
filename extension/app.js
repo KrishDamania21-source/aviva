@@ -27,6 +27,9 @@ let appliedFilters = [];
 // asks a question before Tableau finishes initializing
 let tableauInitPromise = null;
 
+// Workbook field/calc metadata collected from Tableau on init
+let workbookContext = null;
+
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const questionInput  = document.getElementById("question");
 const askBtn         = document.getElementById("askBtn");
@@ -41,13 +44,184 @@ const filterPills    = document.getElementById("filterPills");
 const sqlDetails     = document.getElementById("sqlDetails");
 const sqlText        = document.getElementById("sqlText");
 const clearBtn       = document.getElementById("clearBtn");
+const connectionPicker = document.getElementById("connectionPicker");
+
+// Per-session id for DuckDB "demo / no-creds" mode
+const SESSION_ID = "tableau-" + Math.random().toString(36).slice(2, 12);
+let sessionLoaded = false;
+
+// ── Workbook context collection ───────────────────────────────────────────────
+// Defensive caps so a huge workbook can't blow the prompt budget
+const MAX_FIELDS_PER_SHEET = 40;
+const MAX_SAMPLES_PER_FIELD = 6;
+const MAX_FILTER_VALUES = 10;
+const MAX_CONTEXT_BYTES = 24000;  // ~6k tokens; trimmed if exceeded
+
+async function collectWorkbookContext() {
+  if (typeof tableau === "undefined" || !tableau.extensions?.dashboardContent) return;
+
+  const dashboard = tableau.extensions.dashboardContent.dashboard;
+  const sheets = [];
+  const seenDataSources = new Set();
+
+  for (const ws of dashboard.worksheets) {
+    try {
+      const sheetEntry = { name: ws.name, fields: [], currentFilters: [] };
+
+      // Collect fields from each data source, deduped by datasource name
+      let dataSources = [];
+      try { dataSources = await ws.getDataSourcesAsync(); } catch (e) { /* skip */ }
+
+      for (const ds of dataSources) {
+        if (seenDataSources.has(ds.name)) continue;
+        seenDataSources.add(ds.name);
+
+        let dsFields = [];
+        try { dsFields = await ds.getFieldsAsync(); } catch (e) { continue; }
+
+        for (const f of dsFields) {
+          if (f.isHidden) continue;
+          const entry = {
+            name: f.name,
+            role: f.role,
+            dataType: f.dataType,
+            isCalc: f.isCalculatedField,
+            description: f.description || null,
+          };
+          // Newer Extensions API (≥1.10) exposes calc formula on calculated fields.
+          // Wrapped in try because older Tableau versions throw on access.
+          if (f.isCalculatedField) {
+            try {
+              if (typeof f.calculation === "string" && f.calculation) {
+                entry.formula = f.calculation;
+              }
+            } catch (e) { /* not supported on this Tableau version */ }
+          }
+          sheetEntry.fields.push(entry);
+        }
+      }
+
+      // Sample values per dimension from summary data
+      try {
+        const summaryData = await ws.getSummaryDataAsync({ maxRows: 200 });
+        const samplesMap = {};
+        summaryData.columns.forEach((col, i) => {
+          const unique = new Set();
+          for (const row of summaryData.data) {
+            const v = row[i]?.formattedValue;
+            if (v && v !== "Null" && v !== "null" && unique.size < MAX_SAMPLES_PER_FIELD) {
+              unique.add(v);
+            }
+          }
+          if (unique.size > 0) samplesMap[col.fieldName] = [...unique];
+        });
+        for (const field of sheetEntry.fields) {
+          if (samplesMap[field.name]) field.samples = samplesMap[field.name];
+        }
+      } catch (e) {
+        console.warn(`getSummaryDataAsync failed for "${ws.name}":`, e);
+      }
+
+      // Currently-applied filters on this worksheet
+      try {
+        const wsFilters = await ws.getFiltersAsync();
+        for (const f of wsFilters) {
+          if (f.filterType === "categorical" && f.appliedValues?.length) {
+            sheetEntry.currentFilters.push({
+              field: f.fieldName,
+              values: f.appliedValues.slice(0, MAX_FILTER_VALUES).map(v => v.formattedValue),
+            });
+          } else if (f.filterType === "range" && f.minValue != null && f.maxValue != null) {
+            sheetEntry.currentFilters.push({
+              field: f.fieldName,
+              range: [f.minValue.formattedValue, f.maxValue.formattedValue],
+            });
+          }
+        }
+      } catch (e) { /* skip */ }
+
+      // Cap fields per sheet — keep dimensions first since they drive filters
+      if (sheetEntry.fields.length > MAX_FIELDS_PER_SHEET) {
+        sheetEntry.fields.sort((a, b) => (a.role === "dimension" ? -1 : 1));
+        sheetEntry.fields = sheetEntry.fields.slice(0, MAX_FIELDS_PER_SHEET);
+        sheetEntry._truncated = true;
+      }
+
+      sheets.push(sheetEntry);
+    } catch (e) {
+      console.warn(`Could not process worksheet "${ws.name}":`, e);
+    }
+  }
+
+  // Dashboard-level parameters (often drive what the user sees)
+  const parameters = [];
+  try {
+    const params = await dashboard.getParametersAsync();
+    for (const p of params) {
+      parameters.push({
+        name: p.name,
+        dataType: p.dataType,
+        currentValue: p.currentValue?.formattedValue,
+        allowableValues: p.allowableValues?.type,
+      });
+    }
+  } catch (e) { /* skip */ }
+
+  const ctx = { sheets };
+  if (parameters.length) ctx.parameters = parameters;
+
+  // Token-budget guard: if the JSON is too big, drop samples (lowest-value bits first)
+  let payload = JSON.stringify(ctx);
+  if (payload.length > MAX_CONTEXT_BYTES) {
+    for (const s of ctx.sheets) {
+      for (const f of s.fields) delete f.samples;
+    }
+    payload = JSON.stringify(ctx);
+    console.warn(`Aviva: workbook context exceeded ${MAX_CONTEXT_BYTES} bytes — dropped sample values`);
+  }
+
+  workbookContext = sheets.length > 0 ? ctx : null;
+  if (workbookContext) {
+    console.log(
+      `Aviva: workbook context collected — ${sheets.length} sheet(s), ` +
+      `${parameters.length} parameter(s), ${payload.length} bytes`
+    );
+  }
+}
+
+// ── Refresh context when the dashboard state changes ─────────────────────────
+let refreshTimer = null;
+function scheduleContextRefresh() {
+  // Debounce: filter drags fire many events; coalesce to one collection
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => { collectWorkbookContext().catch(() => {}); }, 600);
+}
+
+function wireDashboardListeners() {
+  if (typeof tableau === "undefined" || !tableau.extensions?.dashboardContent) return;
+  const dashboard = tableau.extensions.dashboardContent.dashboard;
+  const E = tableau.TableauEventType || {};
+
+  // Per-worksheet filter changes
+  for (const ws of dashboard.worksheets) {
+    try { ws.addEventListener(E.FilterChanged, scheduleContextRefresh); } catch (e) { /* skip */ }
+  }
+  // Dashboard-level parameter changes
+  try { dashboard.addEventListener(E.ParameterChanged, scheduleContextRefresh); } catch (e) { /* skip */ }
+}
 
 // ── Tableau init ──────────────────────────────────────────────────────────────
 try {
   if (typeof tableau !== "undefined" && tableau.extensions) {
     tableauInitPromise = tableau.extensions.initializeAsync();
     tableauInitPromise
-      .then(() => setStatus("Ready. Type a question above.", ""))
+      .then(async () => {
+        await collectWorkbookContext();
+        wireDashboardListeners();
+        await loadConnectionPicker();
+        await pushSessionData();   // best-effort upload of worksheet snapshots
+        setStatus("Ready. Type a question above.", "");
+      })
       .catch(err => {
         tableauInitPromise = null;
         setStatus("Ready. Type a question above.", "");
@@ -82,10 +256,19 @@ async function handleAsk() {
   hideAnswer();
 
   try {
+    const selectedConnection = connectionPicker?.value || null;
+    const body = {
+      question,
+      workbook_context: workbookContext,
+      connection: selectedConnection,
+      // Only send session_id if we don't have a live connection AND data is loaded
+      session_id: (!selectedConnection && sessionLoaded) ? SESSION_ID : null,
+    };
+
     const response = await fetch(`${API_URL}/query`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -260,6 +443,66 @@ function setLoading(loading) {
 function setStatus(message, type) {
   statusEl.textContent = message;
   statusEl.className = type || "";
+}
+
+// ── Connection picker ────────────────────────────────────────────────────────
+async function loadConnectionPicker() {
+  if (!connectionPicker) return;
+  try {
+    const r = await fetch(`${API_URL}/connections`);
+    if (!r.ok) return;
+    const data = await r.json();
+    // Wipe and rebuild — first option always demo/session mode
+    connectionPicker.innerHTML = '<option value="">Dashboard data</option>';
+    for (const c of data.connections || []) {
+      const opt = document.createElement("option");
+      opt.value = c.name;
+      opt.textContent = c.label || c.name;
+      connectionPicker.appendChild(opt);
+    }
+  } catch (e) {
+    console.warn("Could not load connection list:", e);
+  }
+}
+
+// ── Push worksheet snapshots into the backend's DuckDB session ───────────────
+async function pushSessionData() {
+  if (typeof tableau === "undefined" || !tableau.extensions?.dashboardContent) return;
+  const dashboard = tableau.extensions.dashboardContent.dashboard;
+  const sheets = [];
+
+  for (const ws of dashboard.worksheets) {
+    try {
+      const sd = await ws.getSummaryDataAsync({ maxRows: 10000 });
+      if (!sd.columns?.length || !sd.data?.length) continue;
+      sheets.push({
+        name: ws.name,
+        columns: sd.columns.map(c => c.fieldName),
+        rows: sd.data.map(row => row.map(cell => cell.value ?? cell.formattedValue ?? null)),
+      });
+    } catch (e) {
+      console.warn(`getSummaryDataAsync failed for "${ws.name}":`, e);
+    }
+  }
+
+  if (!sheets.length) return;
+
+  try {
+    const r = await fetch(`${API_URL}/load-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: SESSION_ID, sheets }),
+    });
+    if (r.ok) {
+      sessionLoaded = true;
+      const data = await r.json();
+      console.log(`Aviva: session loaded with tables:`, data.tables);
+    } else {
+      console.warn(`load-session returned ${r.status}`);
+    }
+  } catch (e) {
+    console.warn("Could not push session data:", e);
+  }
 }
 
 async function handleRefresh() {

@@ -17,7 +17,6 @@ def load_all_sources():
     """Load every CSV defined in CSV_SOURCES into the Postgres database."""
     # Read directly from environment to avoid import-time config issues
     db_url = os.environ.get("DATABASE_URL", "")
-    print(f"DATABASE_URL starts with: {db_url[:30] if db_url else 'EMPTY'}")
     if not db_url:
         raise ValueError("DATABASE_URL environment variable is not set.")
     engine = create_engine(db_url)
