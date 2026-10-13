@@ -27,51 +27,172 @@ st.set_page_config(page_title="Aviva", layout="centered")
 
 st.markdown("""
 <style>
+    /* ── Base ─────────────────────────────────────────────────────────── */
     code { white-space: pre-wrap !important; word-wrap: break-word !important; }
     .stCodeBlock > div { resize: none !important; }
 
-    /* Pipeline strip */
-    .pipeline-strip {
-        background: #F4F6F9;
-        border-radius: 6px;
-        padding: 10px 16px;
-        margin: 12px 0 20px 0;
-        font-size: 0.82rem;
-        color: #555;
-        letter-spacing: 0.01em;
+    /* ── Sidebar ──────────────────────────────────────────────────────── */
+    section[data-testid="stSidebar"] {
+        background-color: #F8FAFC !important;
     }
-    .pipeline-strip .steps {
-        font-weight: 500;
-        color: #1B3A6B;
+    .sidebar-source-name {
+        color: #0F766E;
+        font-weight: 700;
     }
-    .pipeline-strip .tagline {
-        font-style: italic;
-        font-size: 0.77rem;
-        margin-top: 4px;
-        color: #777;
+    .sidebar-source-desc {
+        color: #374151;
+        font-size: 0.85rem;
+    }
+    .sidebar-source-row {
+        margin-bottom: 10px;
+        line-height: 1.4;
     }
 
-    /* Example chips */
-    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-    .chip {
-        background: #EEF1F7;
-        border: 1px solid #C8D0E0;
+    /* ── Header band ──────────────────────────────────────────────────── */
+    .header-band {
+        background: linear-gradient(135deg, #CCFBF1 0%, #F0FDFA 60%, #FFFFFF 100%);
+        border-radius: 10px;
+        padding: 20px 24px 16px 24px;
+        margin-bottom: 4px;
+    }
+    .header-band h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #0F4C45;
+        margin: 0 0 4px 0;
+        line-height: 1.1;
+    }
+    .header-band p {
+        font-size: 1rem;
+        color: #374151;
+        margin: 0;
+    }
+
+    /* ── Pipeline strip ───────────────────────────────────────────────── */
+    .pipeline-strip {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        background: #F0FDFA;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin: 10px 0 18px 0;
+    }
+    .step-pill {
+        background: #CCFBF1;
+        color: #0F766E;
+        font-size: 0.76rem;
+        font-weight: 600;
         border-radius: 20px;
-        padding: 5px 14px;
-        font-size: 0.82rem;
-        color: #1B3A6B;
-        cursor: pointer;
+        padding: 3px 10px;
         white-space: nowrap;
     }
-    .chip:hover { background: #D8E0F0; }
+    .step-sep {
+        color: #0F766E;
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 0 1px;
+    }
+    .pipeline-tagline {
+        width: 100%;
+        font-style: italic;
+        font-size: 0.76rem;
+        color: #6B7280;
+        margin-top: 6px;
+    }
 
-    /* Footer */
+    /* ── Example chip buttons ─────────────────────────────────────────── */
+    div[data-testid="stButton"] > button[kind="secondary"] {
+        background: #FFFFFF !important;
+        border: 1.5px solid #0F766E !important;
+        border-radius: 20px !important;
+        color: #0F766E !important;
+        font-size: 0.82rem !important;
+        padding: 4px 14px !important;
+        transition: background 0.15s, color 0.15s;
+    }
+    div[data-testid="stButton"] > button[kind="secondary"]:hover {
+        background: #0F766E !important;
+        color: #FFFFFF !important;
+    }
+
+    /* ── Routing box ──────────────────────────────────────────────────── */
+    .routing-box {
+        background: #EFF6FF;
+        border-left: 4px solid #3B82F6;
+        border-radius: 0 6px 6px 0;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+    }
+    .routing-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #6B7280;
+        margin-bottom: 4px;
+    }
+    .routing-table {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1E40AF;
+        margin-bottom: 4px;
+    }
+    .routing-reason {
+        font-size: 0.88rem;
+        color: #374151;
+        font-style: italic;
+        margin-bottom: 4px;
+    }
+    .routing-runner-up {
+        font-size: 0.78rem;
+        color: #9CA3AF;
+    }
+
+    /* ── Answer card ──────────────────────────────────────────────────── */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        border: none !important;
+        border-left: 4px solid #0F766E !important;
+        border-radius: 0 8px 8px 0 !important;
+        box-shadow: 0 2px 8px rgba(15, 118, 110, 0.10) !important;
+        padding-left: 4px;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"] p {
+        font-size: 1.02rem;
+    }
+
+    /* ── Self-corrected amber pill ────────────────────────────────────── */
+    .self-corrected-pill {
+        background: #F59E0B;
+        color: #FFFFFF;
+        font-size: 0.72rem;
+        font-weight: 700;
+        border-radius: 20px;
+        padding: 2px 10px;
+        vertical-align: middle;
+        margin-left: 8px;
+        letter-spacing: 0.03em;
+    }
+
+    /* ── Read-only check pill ─────────────────────────────────────────── */
+    .readonly-pill {
+        background: #D1FAE5;
+        color: #065F46;
+        font-size: 0.72rem;
+        font-weight: 700;
+        border-radius: 20px;
+        padding: 2px 10px;
+        vertical-align: middle;
+        letter-spacing: 0.03em;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
     .footer {
         margin-top: 48px;
         padding-top: 12px;
         border-top: 1px solid #E0E4EC;
         font-size: 0.76rem;
-        color: #999;
+        color: #9CA3AF;
         text-align: center;
     }
 </style>
@@ -82,7 +203,13 @@ with st.sidebar:
     st.markdown("### Data sources")
     for key, desc in DATA_SOURCE_DESCRIPTIONS.items():
         label = SOURCE_LABELS[key]
-        st.markdown(f"**{label}** — {desc}")
+        st.markdown(
+            f'<div class="sidebar-source-row">'
+            f'<span class="sidebar-source-name">{label}</span>'
+            f'<span class="sidebar-source-desc"> — {desc}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
     st.divider()
     st.markdown("**Demo controls**")
@@ -94,13 +221,27 @@ with st.sidebar:
         )
 
 # ── Header ────────────────────────────────────────────────────────────────────
-st.markdown("# Aviva")
-st.markdown("Ask your sales and marketing data anything.")
+st.markdown("""
+<div class="header-band">
+    <h1>Aviva</h1>
+    <p>Ask your sales and marketing data anything.</p>
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("""
 <div class="pipeline-strip">
-    <div class="steps">Question &rsaquo; Pick data source &rsaquo; Write SQL &rsaquo; Read-only check &rsaquo; Run &rsaquo; Explain</div>
-    <div class="tagline">Self-correcting, read-only, and it shows its reasoning.</div>
+    <span class="step-pill">Question</span>
+    <span class="step-sep">&rsaquo;</span>
+    <span class="step-pill">Pick data source</span>
+    <span class="step-sep">&rsaquo;</span>
+    <span class="step-pill">Write SQL</span>
+    <span class="step-sep">&rsaquo;</span>
+    <span class="step-pill">Read-only check</span>
+    <span class="step-sep">&rsaquo;</span>
+    <span class="step-pill">Run</span>
+    <span class="step-sep">&rsaquo;</span>
+    <span class="step-pill">Explain</span>
+    <span class="pipeline-tagline">Self-correcting, read-only, and it shows its reasoning.</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -152,7 +293,7 @@ def render_chart(rows: list[dict]):
     if not text or not numeric:
         return
     x, y = text[0], numeric[0]
-    chart = alt.Chart(df).mark_bar().encode(
+    chart = alt.Chart(df).mark_bar(color="#0F766E").encode(
         x=alt.X(f"{x}:N", sort="-y", title=x),
         y=alt.Y(f"{y}:Q", title=y),
         tooltip=[x, y],
@@ -173,19 +314,37 @@ if (run_question or chip_question) and active_question.strip():
     # 1. Routing decision
     routing = result.get("routing")
     if routing:
-        with st.container(border=True):
-            st.caption("ROUTING DECISION")
-            st.markdown(f"**→ {source_label(routing['table'])}**")
-            if routing.get("reason"):
-                st.markdown(f"*{routing['reason'].replace('$', chr(92) + '$')}*")
-            if routing.get("runner_up"):
-                st.caption(f"Runner-up: {source_label(routing['runner_up'])}")
+        table_html = source_label(routing["table"]).replace("`", "")
+        reason_html = (
+            f'<div class="routing-reason">{routing["reason"].replace("$", "&#36;")}</div>'
+            if routing.get("reason") else ""
+        )
+        runner_up_html = (
+            f'<div class="routing-runner-up">Runner-up: {source_label(routing["runner_up"]).replace("`", "")}</div>'
+            if routing.get("runner_up") else ""
+        )
+        st.markdown(f"""
+<div class="routing-box">
+    <div class="routing-label">ROUTED TO</div>
+    <div class="routing-table">&rarr; {table_html}</div>
+    {reason_html}
+    {runner_up_html}
+</div>
+""", unsafe_allow_html=True)
 
     # 2. Answer
-    header = "### Answer"
     if result.get("retried") and not result.get("blocked") and result.get("results") is not None:
-        header += " &nbsp; :orange-badge[:material/healing: Self-corrected]"
-    st.markdown(header)
+        st.markdown(
+            '### Answer &nbsp; <span class="self-corrected-pill">Self-corrected</span>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown("### Answer")
+    if result.get("sql") and not result.get("blocked"):
+        st.markdown(
+            '<span class="readonly-pill">Read-only check passed</span>',
+            unsafe_allow_html=True,
+        )
     answer_md = result["answer"].replace("$", "\\$")
     if result.get("blocked") or result.get("results") is None:
         st.warning(answer_md)
