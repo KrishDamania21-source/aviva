@@ -5,3 +5,7 @@ data/faiss_index/
 data/sales.db
 .venv/
 venv/
+
+.DS_Store
+*.db-journal
+.claude/settings.local.json
